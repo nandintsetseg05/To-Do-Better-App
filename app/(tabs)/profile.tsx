@@ -4,6 +4,7 @@ import { Colors } from '@/app/constants/colors';
 import { Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
 import { notificationService } from '@/app/services/notifications';
+import { syncService } from '@/app/services/sync';
 import { useAuthStore } from '@/app/stores/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -23,6 +24,8 @@ export default function ProfileScreen() {
     const { user, signOut } = useAuthStore();
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [scheduledCount, setScheduledCount] = useState(0);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [lastSyncResult, setLastSyncResult] = useState<string | null>(null);
 
     // Check notification status on mount
     useEffect(() => {
@@ -73,6 +76,16 @@ export default function ProfileScreen() {
         );
     };
 
+    const handleSync = async () => {
+        setIsSyncing(true);
+        setLastSyncResult(null);
+        const result = await syncService.fullSync();
+        setIsSyncing(false);
+        setLastSyncResult(result.success ? '✅ Synced!' : `❌ ${result.error}`);
+        // Clear status after 3 seconds
+        setTimeout(() => setLastSyncResult(null), 3000);
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -113,6 +126,32 @@ export default function ProfileScreen() {
                         />
                     )}
                 </Card>
+
+                {/* Data & Sync (signed-in users only) */}
+                {user && (
+                    <>
+                        <Text style={styles.sectionTitle}>Data & Sync</Text>
+                        <Card>
+                            <TouchableOpacity
+                                style={styles.settingsRow}
+                                onPress={handleSync}
+                                disabled={isSyncing}
+                            >
+                                <Ionicons
+                                    name="cloud-upload-outline"
+                                    size={22}
+                                    color={isSyncing ? Colors.textMuted : Colors.primary}
+                                />
+                                <Text style={[styles.settingsLabel, { color: Colors.primary }]}>
+                                    {isSyncing ? 'Syncing...' : 'Sync Now'}
+                                </Text>
+                                {lastSyncResult && (
+                                    <Text style={styles.settingsValue}>{lastSyncResult}</Text>
+                                )}
+                            </TouchableOpacity>
+                        </Card>
+                    </>
+                )}
 
                 {/* Notifications Section */}
                 <Text style={styles.sectionTitle}>Notifications</Text>
