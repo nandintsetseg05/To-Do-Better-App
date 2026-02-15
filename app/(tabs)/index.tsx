@@ -2,6 +2,7 @@ import { HabitCard } from '@/app/components/habits/HabitCard';
 import { HabitForm, type HabitFormData } from '@/app/components/habits/HabitForm';
 import { EmptyState } from '@/app/components/shared/EmptyState';
 import { FloatingActionButton } from '@/app/components/shared/FloatingActionButton';
+import { MotivationCard } from '@/app/components/shared/MotivationCard';
 import { TaskCard } from '@/app/components/tasks/TaskCard';
 import { TaskForm, type TaskFormData } from '@/app/components/tasks/TaskForm';
 import { Colors } from '@/app/constants/colors';
@@ -188,6 +189,20 @@ export default function HomeScreen() {
           </View>
         )}
       </Animated.View>
+
+      {/* AI Motivation */}
+      {!isEmpty && (
+        <MotivationCard
+          context={{
+            habitName: activeHabits[0]?.name ?? '',
+            emoji: activeHabits[0]?.emoji ?? '💪',
+            currentStreak: 0,
+            isCompletedToday: todayCompletions.length > 0,
+            totalHabits: activeHabits.length,
+            completedToday: todayCompletions.length,
+          }}
+        />
+      )}
 
       {/* Content */}
       {isEmpty ? (
