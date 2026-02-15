@@ -7,6 +7,7 @@ import { TaskForm, type TaskFormData } from '@/app/components/tasks/TaskForm';
 import { Colors } from '@/app/constants/colors';
 import { Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { notificationService } from '@/app/services/notifications';
 import { useAppStore, type Habit, type OneTimeTask } from '@/app/stores/useAppStore';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -77,15 +78,27 @@ export default function HomeScreen() {
   );
 
   const handleCreateHabit = useCallback(
-    (data: HabitFormData) => {
+    async (data: HabitFormData) => {
+      const habitId = Date.now().toString();
       const newHabit: Habit = {
-        id: Date.now().toString(),
+        id: habitId,
         ...data,
         is_active: true,
         created_at: new Date().toISOString(),
       };
       addHabit(newHabit);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // Schedule notification if reminder time is set
+      if (data.reminder_time) {
+        await notificationService.scheduleHabitReminder(
+          habitId,
+          data.name,
+          data.emoji,
+          data.reminder_time,
+          data.recurrence_days
+        );
+      }
     },
     [addHabit]
   );

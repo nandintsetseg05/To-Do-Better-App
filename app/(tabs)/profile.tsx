@@ -3,17 +3,76 @@ import { Card } from '@/app/components/shared/Card';
 import { Colors } from '@/app/constants/colors';
 import { Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { notificationService } from '@/app/services/notifications';
+import { useAuthStore } from '@/app/stores/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
+    Alert,
     SafeAreaView,
     ScrollView,
     StyleSheet,
+    Switch,
     Text,
+    TouchableOpacity,
     View,
 } from 'react-native';
 
 export default function ProfileScreen() {
+    const { user, signOut } = useAuthStore();
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const [scheduledCount, setScheduledCount] = useState(0);
+
+    // Check notification status on mount
+    useEffect(() => {
+        checkNotificationStatus();
+    }, []);
+
+    const checkNotificationStatus = async () => {
+        const hasPerms = await notificationService.hasPermission();
+        setNotificationsEnabled(hasPerms);
+        const count = await notificationService.getScheduledCount();
+        setScheduledCount(count);
+    };
+
+    const handleToggleNotifications = async (value: boolean) => {
+        if (value) {
+            const granted = await notificationService.requestPermissions();
+            setNotificationsEnabled(granted);
+            if (!granted) {
+                Alert.alert(
+                    'Notifications Disabled',
+                    'Please enable notifications in your device settings to receive habit reminders.',
+                );
+            }
+        } else {
+            await notificationService.cancelAll();
+            setNotificationsEnabled(false);
+            setScheduledCount(0);
+        }
+    };
+
+    const handleSignOut = async () => {
+        Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Sign Out',
+                style: 'destructive',
+                onPress: async () => {
+                    await signOut();
+                },
+            },
+        ]);
+    };
+
+    const handleTestNotification = async () => {
+        await notificationService.sendInstant(
+            '🎯 Test Notification',
+            'Notifications are working! Your habit reminders will appear like this.'
+        );
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -28,30 +87,72 @@ export default function ProfileScreen() {
                             <Ionicons name="person" size={32} color={Colors.primary} />
                         </View>
                         <View style={styles.userInfo}>
-                            <Text style={styles.userName}>Guest User</Text>
-                            <Text style={styles.userEmail}>Sign in to sync your data</Text>
+                            <Text style={styles.userName}>
+                                {user ? user.email?.split('@')[0] : 'Guest User'}
+                            </Text>
+                            <Text style={styles.userEmail}>
+                                {user ? user.email : 'Sign in to sync your data'}
+                            </Text>
                         </View>
                     </View>
-                    <Button
-                        title="Sign In"
-                        onPress={() => {
-                            // TODO: Navigate to AuthScreen
-                        }}
-                        variant="outline"
-                        size="sm"
-                        fullWidth
-                    />
+                    {user ? (
+                        <Button
+                            title="Sign Out"
+                            onPress={handleSignOut}
+                            variant="danger"
+                            size="sm"
+                            fullWidth
+                        />
+                    ) : (
+                        <Button
+                            title="Sign In"
+                            onPress={() => router.push('/screens/AuthScreen')}
+                            variant="outline"
+                            size="sm"
+                            fullWidth
+                        />
+                    )}
+                </Card>
+
+                {/* Notifications Section */}
+                <Text style={styles.sectionTitle}>Notifications</Text>
+                <Card>
+                    <View style={styles.settingsRow}>
+                        <Ionicons name="notifications-outline" size={22} color={Colors.textSecondary} />
+                        <Text style={styles.settingsLabel}>Push Notifications</Text>
+                        <Switch
+                            value={notificationsEnabled}
+                            onValueChange={handleToggleNotifications}
+                            trackColor={{ false: Colors.border, true: Colors.primary + '50' }}
+                            thumbColor={notificationsEnabled ? Colors.primary : Colors.textMuted}
+                        />
+                    </View>
+
+                    {notificationsEnabled && (
+                        <>
+                            <View style={styles.divider} />
+                            <View style={styles.settingsRow}>
+                                <Ionicons name="alarm-outline" size={22} color={Colors.textSecondary} />
+                                <Text style={styles.settingsLabel}>Active Reminders</Text>
+                                <Text style={styles.settingsValue}>{scheduledCount}</Text>
+                            </View>
+                            <View style={styles.divider} />
+                            <TouchableOpacity
+                                style={styles.settingsRow}
+                                onPress={handleTestNotification}
+                            >
+                                <Ionicons name="paper-plane-outline" size={22} color={Colors.primary} />
+                                <Text style={[styles.settingsLabel, { color: Colors.primary }]}>
+                                    Send Test Notification
+                                </Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
                 </Card>
 
                 {/* Settings Section */}
-                <Text style={styles.sectionTitle}>Settings</Text>
+                <Text style={styles.sectionTitle}>Appearance</Text>
                 <Card>
-                    <SettingsRow
-                        icon="notifications-outline"
-                        label="Notifications"
-                        value="On"
-                    />
-                    <View style={styles.divider} />
                     <SettingsRow
                         icon="moon-outline"
                         label="Dark Mode"

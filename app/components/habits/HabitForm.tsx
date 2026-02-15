@@ -1,6 +1,7 @@
 import { Button } from '@/app/components/shared/Button';
 import { Input } from '@/app/components/shared/Input';
 import { ModalWrapper } from '@/app/components/shared/ModalWrapper';
+import { TimePicker } from '@/app/components/shared/TimePicker';
 import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
@@ -45,6 +46,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({
     const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('daily');
     const [recurrenceDays, setRecurrenceDays] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
     const [priority, setPriority] = useState<Priority>('medium');
+    const [reminderTime, setReminderTime] = useState<string | null>(null);
     const [error, setError] = useState('');
 
     const resetForm = () => {
@@ -53,6 +55,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({
         setRecurrenceType('daily');
         setRecurrenceDays([0, 1, 2, 3, 4, 5, 6]);
         setPriority('medium');
+        setReminderTime(null);
         setError('');
     };
 
@@ -73,7 +76,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({
             recurrence_type: recurrenceType,
             recurrence_days:
                 recurrenceType === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : recurrenceDays,
-            reminder_time: null,
+            reminder_time: reminderTime,
             priority,
         });
 
@@ -184,6 +187,13 @@ export const HabitForm: React.FC<HabitFormProps> = ({
                     color={Colors.priorityHigh}
                 />
             </View>
+
+            {/* Reminder Time */}
+            <TimePicker
+                value={reminderTime}
+                onChange={setReminderTime}
+                label="Reminder"
+            />
 
             {/* Submit */}
             <View style={styles.submitContainer}>
