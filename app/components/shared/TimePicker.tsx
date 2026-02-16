@@ -1,6 +1,6 @@
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -30,6 +30,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     onChange,
     label = 'Reminder time',
 }) => {
+    const colors = useColors();
     const [showPicker, setShowPicker] = useState(false);
     const [selectedHour, setSelectedHour] = useState(
         value ? parseInt(value.split(':')[0], 10) : 9
@@ -59,23 +60,31 @@ export const TimePicker: React.FC<TimePickerProps> = ({
 
     return (
         <View>
-            <Text style={styles.label}>{label}</Text>
+            <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
 
             <TouchableOpacity
                 onPress={() => setShowPicker(true)}
-                style={[styles.pill, value !== null && styles.pillActive]}
+                style={[
+                    styles.pill,
+                    { borderColor: colors.border, backgroundColor: colors.surface },
+                    value !== null && { borderColor: colors.primary, backgroundColor: colors.primary + '08' },
+                ]}
                 accessibilityRole="button"
                 accessibilityLabel={`Set reminder time, currently ${value ? formatTime(selectedHour, selectedMinute) : 'not set'}`}
             >
                 <Ionicons
                     name={value ? 'notifications' : 'notifications-outline'}
                     size={18}
-                    color={value ? Colors.primary : Colors.textMuted}
+                    color={value ? colors.primary : colors.textMuted}
                 />
-                <Text style={[styles.pillText, value !== null && styles.pillTextActive]}>
+                <Text style={[
+                    styles.pillText,
+                    { color: colors.textSecondary },
+                    value !== null && { color: colors.text, fontWeight: FontWeight.medium },
+                ]}>
                     {value ? `🔔 ${formatTime(selectedHour, selectedMinute)}` : 'No reminder'}
                 </Text>
-                <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
             </TouchableOpacity>
 
             {/* Picker Modal */}
@@ -87,24 +96,24 @@ export const TimePicker: React.FC<TimePickerProps> = ({
             >
                 <View style={styles.overlay}>
                     <TouchableOpacity
-                        style={styles.backdrop}
+                        style={[styles.backdrop, { backgroundColor: colors.overlay }]}
                         activeOpacity={1}
                         onPress={() => setShowPicker(false)}
                     />
-                    <View style={styles.sheet}>
+                    <View style={[styles.sheet, { backgroundColor: colors.surface }]}>
                         {/* Header */}
-                        <View style={styles.sheetHeader}>
+                        <View style={[styles.sheetHeader, { borderBottomColor: colors.border }]}>
                             <TouchableOpacity onPress={handleClear}>
-                                <Text style={styles.clearButton}>No reminder</Text>
+                                <Text style={[styles.clearButton, { color: colors.error }]}>No reminder</Text>
                             </TouchableOpacity>
-                            <Text style={styles.sheetTitle}>Set Time</Text>
+                            <Text style={[styles.sheetTitle, { color: colors.text }]}>Set Time</Text>
                             <TouchableOpacity onPress={handleConfirm}>
-                                <Text style={styles.doneButton}>Done</Text>
+                                <Text style={[styles.doneButton, { color: colors.primary }]}>Done</Text>
                             </TouchableOpacity>
                         </View>
 
                         {/* Preview */}
-                        <Text style={styles.preview}>
+                        <Text style={[styles.preview, { color: colors.primary }]}>
                             {formatTime(selectedHour, selectedMinute)}
                         </Text>
 
@@ -112,7 +121,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
                         <View style={styles.columns}>
                             {/* Hours */}
                             <View style={styles.column}>
-                                <Text style={styles.columnLabel}>Hour</Text>
+                                <Text style={[styles.columnLabel, { color: colors.textMuted }]}>Hour</Text>
                                 <FlatList
                                     data={HOURS}
                                     keyExtractor={(item) => `h-${item}`}
@@ -123,13 +132,14 @@ export const TimePicker: React.FC<TimePickerProps> = ({
                                             onPress={() => setSelectedHour(h)}
                                             style={[
                                                 styles.timeCell,
-                                                selectedHour === h && styles.timeCellActive,
+                                                selectedHour === h && { backgroundColor: colors.primary + '15' },
                                             ]}
                                         >
                                             <Text
                                                 style={[
                                                     styles.timeCellText,
-                                                    selectedHour === h && styles.timeCellTextActive,
+                                                    { color: colors.textSecondary },
+                                                    selectedHour === h && { color: colors.primary, fontWeight: FontWeight.bold },
                                                 ]}
                                             >
                                                 {h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`}
@@ -141,7 +151,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
 
                             {/* Minutes */}
                             <View style={styles.column}>
-                                <Text style={styles.columnLabel}>Minute</Text>
+                                <Text style={[styles.columnLabel, { color: colors.textMuted }]}>Minute</Text>
                                 <FlatList
                                     data={MINUTES}
                                     keyExtractor={(item) => `m-${item}`}
@@ -152,13 +162,14 @@ export const TimePicker: React.FC<TimePickerProps> = ({
                                             onPress={() => setSelectedMinute(m)}
                                             style={[
                                                 styles.timeCell,
-                                                selectedMinute === m && styles.timeCellActive,
+                                                selectedMinute === m && { backgroundColor: colors.primary + '15' },
                                             ]}
                                         >
                                             <Text
                                                 style={[
                                                     styles.timeCellText,
-                                                    selectedMinute === m && styles.timeCellTextActive,
+                                                    { color: colors.textSecondary },
+                                                    selectedMinute === m && { color: colors.primary, fontWeight: FontWeight.bold },
                                                 ]}
                                             >
                                                 :{m.toString().padStart(2, '0')}
@@ -179,7 +190,6 @@ const styles = StyleSheet.create({
     label: {
         fontSize: FontSize.sm,
         fontWeight: FontWeight.semibold,
-        color: Colors.text,
         marginBottom: Spacing.sm,
         marginTop: Spacing.base,
     },
@@ -192,24 +202,11 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.md,
         borderRadius: BorderRadius.lg,
         borderWidth: 1.5,
-        borderColor: Colors.border,
-        backgroundColor: Colors.surface,
-    },
-
-    pillActive: {
-        borderColor: Colors.primary,
-        backgroundColor: Colors.primary + '08',
     },
 
     pillText: {
         flex: 1,
         fontSize: FontSize.base,
-        color: Colors.textSecondary,
-    },
-
-    pillTextActive: {
-        color: Colors.text,
-        fontWeight: FontWeight.medium,
     },
 
     // ── Modal ──
@@ -220,11 +217,9 @@ const styles = StyleSheet.create({
 
     backdrop: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: Colors.overlay,
     },
 
     sheet: {
-        backgroundColor: Colors.surface,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         paddingBottom: Spacing['2xl'],
@@ -238,31 +233,26 @@ const styles = StyleSheet.create({
         paddingHorizontal: Spacing.lg,
         paddingVertical: Spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
     },
 
     sheetTitle: {
         fontSize: FontSize.base,
         fontWeight: FontWeight.semibold,
-        color: Colors.text,
     },
 
     clearButton: {
         fontSize: FontSize.sm,
-        color: Colors.error,
         fontWeight: FontWeight.medium,
     },
 
     doneButton: {
         fontSize: FontSize.sm,
-        color: Colors.primary,
         fontWeight: FontWeight.bold,
     },
 
     preview: {
         fontSize: FontSize['3xl'],
         fontWeight: FontWeight.bold,
-        color: Colors.primary,
         textAlign: 'center',
         paddingVertical: Spacing.md,
     },
@@ -281,7 +271,6 @@ const styles = StyleSheet.create({
     columnLabel: {
         fontSize: FontSize.xs,
         fontWeight: FontWeight.semibold,
-        color: Colors.textMuted,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
         marginBottom: Spacing.sm,
@@ -300,17 +289,7 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
 
-    timeCellActive: {
-        backgroundColor: Colors.primary + '15',
-    },
-
     timeCellText: {
         fontSize: FontSize.base,
-        color: Colors.textSecondary,
-    },
-
-    timeCellTextActive: {
-        color: Colors.primary,
-        fontWeight: FontWeight.bold,
     },
 });

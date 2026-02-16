@@ -1,9 +1,9 @@
 import { HeatmapGrid } from '@/app/components/calendar/HeatmapGrid';
 import { Card } from '@/app/components/shared/Card';
 import { EmptyState } from '@/app/components/shared/EmptyState';
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import { useAppStore } from '@/app/stores/useAppStore';
 import { calculateStreak } from '@/app/utils/streakEngine';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 
 export default function CalendarScreen() {
+  const colors = useColors();
   const habits = useAppStore((s) => s.habits);
   const todayCompletions = useAppStore((s) => s.todayCompletions);
 
@@ -51,11 +52,11 @@ export default function CalendarScreen() {
   const isEmpty = habits.length === 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>Calendar</Text>
-          <Text style={styles.subtitle}>Your progress over time</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Calendar</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Your progress over time</Text>
         </View>
 
         {isEmpty ? (
@@ -70,32 +71,35 @@ export default function CalendarScreen() {
             <View style={styles.statsRow}>
               <StatCard
                 icon="flame"
-                iconColor={Colors.streakFire}
+                iconColor={colors.streakFire}
                 label="Best Streak"
                 value={`${stats.bestStreak}d`}
+                colors={colors}
               />
               <StatCard
                 icon="today"
-                iconColor={Colors.success}
+                iconColor={colors.success}
                 label="Today"
                 value={`${stats.todayCompleted}/${stats.habitsCount}`}
+                colors={colors}
               />
               <StatCard
                 icon="trending-up"
-                iconColor={Colors.primary}
+                iconColor={colors.primary}
                 label="Avg Streak"
                 value={`${stats.avgStreak}d`}
+                colors={colors}
               />
             </View>
 
             {/* Heatmap */}
             <Card style={styles.heatmapCard}>
-              <Text style={styles.heatmapTitle}>Activity Heatmap</Text>
+              <Text style={[styles.heatmapTitle, { color: colors.text }]}>Activity Heatmap</Text>
               <HeatmapGrid completions={todayCompletions} />
             </Card>
 
             {/* Per-habit streaks */}
-            <Text style={styles.sectionTitle}>Habit Streaks</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Habit Streaks</Text>
             {habits
               .filter((h) => h.is_active)
               .map((habit) => {
@@ -108,15 +112,15 @@ export default function CalendarScreen() {
                     <View style={styles.streakRow}>
                       <Text style={styles.streakEmoji}>{habit.emoji}</Text>
                       <View style={styles.streakContent}>
-                        <Text style={styles.streakName} numberOfLines={1}>
+                        <Text style={[styles.streakName, { color: colors.text }]} numberOfLines={1}>
                           {habit.name}
                         </Text>
-                        <Text style={styles.streakRange}>
+                        <Text style={[styles.streakRange, { color: colors.textMuted }]}>
                           Best: {streakResult.longest} days
                         </Text>
                       </View>
-                      <View style={styles.streakBadge}>
-                        <Text style={styles.streakCount}>
+                      <View style={[styles.streakBadge, { backgroundColor: colors.streakFire + '15' }]}>
+                        <Text style={[styles.streakCount, { color: colors.streakFire }]}>
                           🔥 {streakResult.current}
                         </Text>
                       </View>
@@ -136,17 +140,19 @@ function StatCard({
   iconColor,
   label,
   value,
+  colors,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   iconColor: string;
   label: string;
   value: string;
+  colors: ReturnType<typeof useColors>;
 }) {
   return (
     <Card style={styles.statCard}>
       <Ionicons name={icon} size={20} color={iconColor} />
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: colors.textMuted }]}>{label}</Text>
     </Card>
   );
 }
@@ -154,7 +160,6 @@ function StatCard({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
 
   scrollContent: {
@@ -170,12 +175,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSize['2xl'],
     fontWeight: FontWeight.bold,
-    color: Colors.text,
   },
 
   subtitle: {
     fontSize: FontSize.base,
-    color: Colors.textSecondary,
     marginTop: Spacing.xxs,
   },
 
@@ -198,12 +201,10 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: FontSize.xl,
     fontWeight: FontWeight.bold,
-    color: Colors.text,
   },
 
   statLabel: {
     fontSize: FontSize.xs,
-    color: Colors.textMuted,
   },
 
   // ── Heatmap ──
@@ -215,7 +216,6 @@ const styles = StyleSheet.create({
   heatmapTitle: {
     fontSize: FontSize.base,
     fontWeight: FontWeight.semibold,
-    color: Colors.text,
     marginBottom: Spacing.sm,
   },
 
@@ -223,7 +223,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: FontSize.sm,
     fontWeight: FontWeight.semibold,
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginHorizontal: Spacing.lg,
@@ -253,17 +252,14 @@ const styles = StyleSheet.create({
   streakName: {
     fontSize: FontSize.base,
     fontWeight: FontWeight.medium,
-    color: Colors.text,
   },
 
   streakRange: {
     fontSize: FontSize.xs,
-    color: Colors.textMuted,
     marginTop: 2,
   },
 
   streakBadge: {
-    backgroundColor: Colors.streakFire + '15',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
@@ -272,6 +268,5 @@ const styles = StyleSheet.create({
   streakCount: {
     fontSize: FontSize.sm,
     fontWeight: FontWeight.bold,
-    color: Colors.streakFire,
   },
 });

@@ -1,6 +1,6 @@
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import {
@@ -42,6 +42,8 @@ export const Button: React.FC<ButtonProps> = ({
     style,
     textStyle,
 }) => {
+    const colors = useColors();
+
     const handlePress = () => {
         if (!disabled && !loading) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -49,9 +51,26 @@ export const Button: React.FC<ButtonProps> = ({
         }
     };
 
+    // Dynamic variant styles
+    const variantStyles: Record<ButtonVariant, ViewStyle> = {
+        primary: { backgroundColor: colors.primary },
+        secondary: { backgroundColor: colors.secondary },
+        outline: { backgroundColor: 'transparent', borderColor: colors.primary },
+        danger: { backgroundColor: colors.error },
+        ghost: { backgroundColor: 'transparent', borderColor: 'transparent' },
+    };
+
+    const textVariantStyles: Record<ButtonVariant, TextStyle> = {
+        primary: { color: colors.white },
+        secondary: { color: colors.white },
+        outline: { color: colors.primary },
+        danger: { color: colors.white },
+        ghost: { color: colors.primary },
+    };
+
     const containerStyles: ViewStyle[] = [
         styles.base,
-        styles[`variant_${variant}`],
+        variantStyles[variant],
         styles[`size_${size}`],
         fullWidth && styles.fullWidth,
         (disabled || loading) && styles.disabled,
@@ -60,7 +79,7 @@ export const Button: React.FC<ButtonProps> = ({
 
     const textStyles: TextStyle[] = [
         styles.text,
-        styles[`text_${variant}`],
+        textVariantStyles[variant],
         styles[`textSize_${size}`],
         (disabled || loading) && styles.textDisabled,
         textStyle,
@@ -79,7 +98,7 @@ export const Button: React.FC<ButtonProps> = ({
             {loading ? (
                 <ActivityIndicator
                     size="small"
-                    color={variant === 'outline' || variant === 'ghost' ? Colors.primary : Colors.white}
+                    color={variant === 'outline' || variant === 'ghost' ? colors.primary : colors.white}
                 />
             ) : (
                 <>
@@ -99,25 +118,6 @@ const styles = StyleSheet.create({
         gap: Spacing.sm,
         borderRadius: BorderRadius.lg,
         borderWidth: 2,
-        borderColor: 'transparent',
-    },
-
-    // ── Variants ──
-    variant_primary: {
-        backgroundColor: Colors.primary,
-    },
-    variant_secondary: {
-        backgroundColor: Colors.secondary,
-    },
-    variant_outline: {
-        backgroundColor: 'transparent',
-        borderColor: Colors.primary,
-    },
-    variant_danger: {
-        backgroundColor: Colors.error,
-    },
-    variant_ghost: {
-        backgroundColor: 'transparent',
         borderColor: 'transparent',
     },
 
@@ -149,21 +149,6 @@ const styles = StyleSheet.create({
     // ── Text ──
     text: {
         fontWeight: FontWeight.semibold,
-    },
-    text_primary: {
-        color: Colors.white,
-    },
-    text_secondary: {
-        color: Colors.white,
-    },
-    text_outline: {
-        color: Colors.primary,
-    },
-    text_danger: {
-        color: Colors.white,
-    },
-    text_ghost: {
-        color: Colors.primary,
     },
 
     textSize_sm: {

@@ -1,6 +1,6 @@
-import { Colors } from '@/app/constants/colors';
 import { Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -21,13 +21,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     actionLabel,
     onAction,
 }) => {
+    const colors = useColors();
+
     return (
         <View style={styles.container}>
             <View style={styles.iconContainer}>
-                <Ionicons name={icon} size={56} color={Colors.textMuted} />
+                <Ionicons name={icon} size={56} color={colors.textMuted} />
             </View>
-            <Text style={styles.title}>{title}</Text>
-            {message && <Text style={styles.message}>{message}</Text>}
+            <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+            {message && <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>}
             {actionLabel && onAction && (
                 <View style={styles.actionContainer}>
                     <Button title={actionLabel} onPress={onAction} size="md" />
@@ -54,14 +56,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: FontSize.xl,
         fontWeight: FontWeight.semibold,
-        color: Colors.text,
         textAlign: 'center',
         marginBottom: Spacing.sm,
     },
 
     message: {
         fontSize: FontSize.base,
-        color: Colors.textSecondary,
         textAlign: 'center',
         lineHeight: FontSize.base * 1.5,
     },

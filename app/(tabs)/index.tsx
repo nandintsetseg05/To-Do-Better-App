@@ -5,14 +5,14 @@ import { FloatingActionButton } from '@/app/components/shared/FloatingActionButt
 import { MotivationCard } from '@/app/components/shared/MotivationCard';
 import { TaskCard } from '@/app/components/tasks/TaskCard';
 import { TaskForm, type TaskFormData } from '@/app/components/tasks/TaskForm';
-import { Colors } from '@/app/constants/colors';
 import { Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import { notificationService } from '@/app/services/notifications';
 import { useAppStore, type Habit, type OneTimeTask } from '@/app/stores/useAppStore';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   SafeAreaView,
@@ -27,6 +27,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 type CreateMode = 'habit' | 'task';
 
 export default function HomeScreen() {
+  const colors = useColors();
   const [showHabitForm, setShowHabitForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showCreatePicker, setShowCreatePicker] = useState(false);
@@ -173,17 +174,27 @@ export default function HomeScreen() {
     });
   }
 
+  // ── Dynamic styles ──
+  const dynamicStyles = useMemo(() => ({
+    container: { backgroundColor: colors.background },
+    greeting: { color: colors.text },
+    date: { color: colors.textSecondary },
+    progressBadge: { backgroundColor: colors.primary + '15' },
+    progressText: { color: colors.primary },
+    sectionHeader: { color: colors.textSecondary },
+  }), [colors]);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, dynamicStyles.container]}>
       {/* Header */}
       <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
         <View>
-          <Text style={styles.greeting}>{greeting}</Text>
-          <Text style={styles.date}>{dateString}</Text>
+          <Text style={[styles.greeting, dynamicStyles.greeting]}>{greeting}</Text>
+          <Text style={[styles.date, dynamicStyles.date]}>{dateString}</Text>
         </View>
         {!isEmpty && (
-          <View style={styles.progressBadge}>
-            <Text style={styles.progressText}>
+          <View style={[styles.progressBadge, dynamicStyles.progressBadge]}>
+            <Text style={[styles.progressText, dynamicStyles.progressText]}>
               {completedCount}/{totalCount}
             </Text>
           </View>
@@ -218,7 +229,7 @@ export default function HomeScreen() {
           sections={sections}
           keyExtractor={(item) => `${item.type}-${item.data.id}`}
           renderSectionHeader={({ section }) => (
-            <Text style={styles.sectionHeader}>{section.title}</Text>
+            <Text style={[styles.sectionHeader, dynamicStyles.sectionHeader]}>{section.title}</Text>
           )}
           renderItem={({ item }) => {
             if (item.type === 'habit') {
@@ -262,6 +273,7 @@ export default function HomeScreen() {
       {/* Create Picker Bottom Sheet */}
       {showCreatePicker && (
         <CreatePickerSheet
+          colors={colors}
           onSelectHabit={() => {
             setShowCreatePicker(false);
             setShowHabitForm(true);
@@ -291,10 +303,12 @@ export default function HomeScreen() {
 
 // ── Create Picker ──
 function CreatePickerSheet({
+  colors,
   onSelectHabit,
   onSelectTask,
   onClose,
 }: {
+  colors: ReturnType<typeof useColors>;
   onSelectHabit: () => void;
   onSelectTask: () => void;
   onClose: () => void;
@@ -302,44 +316,44 @@ function CreatePickerSheet({
   return (
     <View style={pickerStyles.overlay}>
       <TouchableOpacity
-        style={pickerStyles.backdrop}
+        style={[pickerStyles.backdrop, { backgroundColor: colors.overlay }]}
         activeOpacity={1}
         onPress={onClose}
       />
       <Animated.View
         entering={FadeInDown.springify().damping(18)}
-        style={pickerStyles.sheet}
+        style={[pickerStyles.sheet, { backgroundColor: colors.surface }]}
       >
-        <Text style={pickerStyles.title}>What would you like to create?</Text>
+        <Text style={[pickerStyles.title, { color: colors.text }]}>What would you like to create?</Text>
 
         <TouchableOpacity
           onPress={onSelectHabit}
-          style={pickerStyles.option}
+          style={[pickerStyles.option, { backgroundColor: colors.background }]}
           accessibilityRole="button"
         >
-          <View style={[pickerStyles.iconCircle, { backgroundColor: Colors.primary + '15' }]}>
-            <Ionicons name="repeat" size={22} color={Colors.primary} />
+          <View style={[pickerStyles.iconCircle, { backgroundColor: colors.primary + '15' }]}>
+            <Ionicons name="repeat" size={22} color={colors.primary} />
           </View>
           <View style={pickerStyles.optionContent}>
-            <Text style={pickerStyles.optionTitle}>Habit</Text>
-            <Text style={pickerStyles.optionDesc}>Recurring activity to track daily</Text>
+            <Text style={[pickerStyles.optionTitle, { color: colors.text }]}>Habit</Text>
+            <Text style={[pickerStyles.optionDesc, { color: colors.textSecondary }]}>Recurring activity to track daily</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={onSelectTask}
-          style={pickerStyles.option}
+          style={[pickerStyles.option, { backgroundColor: colors.background }]}
           accessibilityRole="button"
         >
-          <View style={[pickerStyles.iconCircle, { backgroundColor: Colors.secondary + '15' }]}>
-            <Ionicons name="checkbox-outline" size={22} color={Colors.secondary} />
+          <View style={[pickerStyles.iconCircle, { backgroundColor: colors.secondary + '15' }]}>
+            <Ionicons name="checkbox-outline" size={22} color={colors.secondary} />
           </View>
           <View style={pickerStyles.optionContent}>
-            <Text style={pickerStyles.optionTitle}>Task</Text>
-            <Text style={pickerStyles.optionDesc}>One-time to-do with optional due date</Text>
+            <Text style={[pickerStyles.optionTitle, { color: colors.text }]}>Task</Text>
+            <Text style={[pickerStyles.optionDesc, { color: colors.textSecondary }]}>One-time to-do with optional due date</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -354,11 +368,10 @@ function getGreeting(date: Date): string {
   return 'Good evening! 🌙';
 }
 
-// ── Styles ──
+// ── Styles (layout-only, no colors) ──
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
 
   header: {
@@ -373,17 +386,14 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: FontSize['2xl'],
     fontWeight: FontWeight.bold,
-    color: Colors.text,
   },
 
   date: {
     fontSize: FontSize.base,
-    color: Colors.textSecondary,
     marginTop: Spacing.xxs,
   },
 
   progressBadge: {
-    backgroundColor: Colors.primary + '15',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: 20,
@@ -392,7 +402,6 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: FontSize.sm,
     fontWeight: FontWeight.bold,
-    color: Colors.primary,
   },
 
   listContent: {
@@ -402,7 +411,6 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: FontSize.sm,
     fontWeight: FontWeight.semibold,
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginHorizontal: Spacing.lg,
@@ -420,11 +428,9 @@ const pickerStyles = StyleSheet.create({
 
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.overlay,
   },
 
   sheet: {
-    backgroundColor: Colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: Spacing.lg,
@@ -435,7 +441,6 @@ const pickerStyles = StyleSheet.create({
   title: {
     fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
-    color: Colors.text,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
@@ -446,7 +451,6 @@ const pickerStyles = StyleSheet.create({
     gap: Spacing.md,
     padding: Spacing.md,
     borderRadius: 16,
-    backgroundColor: Colors.background,
   },
 
   iconCircle: {
@@ -464,12 +468,10 @@ const pickerStyles = StyleSheet.create({
   optionTitle: {
     fontSize: FontSize.base,
     fontWeight: FontWeight.semibold,
-    color: Colors.text,
   },
 
   optionDesc: {
     fontSize: FontSize.xs,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
 });

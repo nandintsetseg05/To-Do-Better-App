@@ -1,4 +1,4 @@
-import { Colors } from '@/app/constants/colors';
+import { useColors } from '@/app/constants/useColors';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
@@ -19,6 +19,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     onPress,
     icon = 'add',
 }) => {
+    const colors = useColors();
     const scale = useSharedValue(1);
     const pressed = useSharedValue(0);
 
@@ -46,17 +47,17 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     };
 
     return (
-        <Animated.View style={[styles.container, animatedStyle]}>
+        <Animated.View style={[styles.container, { shadowColor: colors.primary }, animatedStyle]}>
             <TouchableOpacity
                 onPress={handlePress}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 activeOpacity={1}
-                style={styles.button}
+                style={[styles.button, { backgroundColor: colors.primary }]}
                 accessibilityLabel="Create new item"
                 accessibilityRole="button"
             >
-                <Ionicons name={icon} size={28} color={Colors.white} />
+                <Ionicons name={icon} size={28} color={colors.white} />
             </TouchableOpacity>
         </Animated.View>
     );
@@ -67,7 +68,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 24,
         right: 20,
-        shadowColor: Colors.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 12,
@@ -78,7 +78,6 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: Colors.primary,
         alignItems: 'center',
         justifyContent: 'center',
     },

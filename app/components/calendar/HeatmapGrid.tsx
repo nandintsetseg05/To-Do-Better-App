@@ -1,6 +1,6 @@
-import { Colors } from '@/app/constants/colors';
 import { Spacing } from '@/app/constants/spacing';
 import { FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import type { Completion } from '@/app/stores/useAppStore';
 import {
     getCompletionCountsByDate,
@@ -19,14 +19,6 @@ const CELL_SIZE = 14;
 const CELL_GAP = 3;
 const WEEKS_TO_SHOW = 20; // ~5 months
 
-const INTENSITY_COLORS = [
-    Colors.heatmap.empty,
-    Colors.heatmap.level1,
-    Colors.heatmap.level2,
-    Colors.heatmap.level3,
-    Colors.heatmap.level4,
-] as const;
-
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 
@@ -39,6 +31,16 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
     completions,
     totalDays = WEEKS_TO_SHOW * 7,
 }) => {
+    const colors = useColors();
+
+    const intensityColors = useMemo(() => [
+        colors.heatmapEmpty,
+        colors.heatmapLevel1,
+        colors.heatmapLevel2,
+        colors.heatmapLevel3,
+        colors.heatmapLevel4,
+    ], [colors]);
+
     const { grid, monthHeaders } = useMemo(() => {
         const counts = getCompletionCountsByDate(completions, totalDays);
         const today = new Date();
@@ -69,7 +71,6 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
         const headers: { label: string; weekIndex: number }[] = [];
         let lastMonth = -1;
         for (let w = 0; w < weeks.length; w++) {
-            // Use the first day of the week (Sunday) to determine month
             const month = weeks[w][0].date.getMonth();
             if (month !== lastMonth) {
                 headers.push({ label: MONTH_LABELS[month], weekIndex: w });
@@ -85,7 +86,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
             {/* Day labels */}
             <View style={styles.dayLabels}>
                 {DAY_LABELS.map((label, i) => (
-                    <Text key={i} style={styles.dayLabel}>
+                    <Text key={i} style={[styles.dayLabel, { color: colors.textMuted }]}>
                         {label}
                     </Text>
                 ))}
@@ -105,7 +106,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                                 key={i}
                                 style={[
                                     styles.monthLabel,
-                                    { left: header.weekIndex * (CELL_SIZE + CELL_GAP) },
+                                    { left: header.weekIndex * (CELL_SIZE + CELL_GAP), color: colors.textMuted },
                                 ]}
                             >
                                 {header.label}
@@ -124,7 +125,7 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
                                             key={day.dateStr}
                                             style={[
                                                 styles.cell,
-                                                { backgroundColor: INTENSITY_COLORS[level] },
+                                                { backgroundColor: intensityColors[level] },
                                             ]}
                                             accessibilityLabel={`${format(day.date, 'MMM d')}: ${day.count} completion${day.count !== 1 ? 's' : ''}`}
                                         />
@@ -138,14 +139,14 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({
 
             {/* Legend */}
             <View style={styles.legend}>
-                <Text style={styles.legendText}>Less</Text>
-                {INTENSITY_COLORS.map((color, i) => (
+                <Text style={[styles.legendText, { color: colors.textMuted }]}>Less</Text>
+                {intensityColors.map((color, i) => (
                     <View
                         key={i}
                         style={[styles.legendCell, { backgroundColor: color }]}
                     />
                 ))}
-                <Text style={styles.legendText}>More</Text>
+                <Text style={[styles.legendText, { color: colors.textMuted }]}>More</Text>
             </View>
         </View>
     );
@@ -165,7 +166,6 @@ const styles = StyleSheet.create({
 
     dayLabel: {
         fontSize: 9,
-        color: Colors.textMuted,
         height: CELL_SIZE + CELL_GAP,
         lineHeight: CELL_SIZE,
         width: 28,
@@ -186,7 +186,6 @@ const styles = StyleSheet.create({
     monthLabel: {
         position: 'absolute',
         fontSize: 9,
-        color: Colors.textMuted,
         fontWeight: FontWeight.medium,
     },
 
@@ -216,7 +215,6 @@ const styles = StyleSheet.create({
 
     legendText: {
         fontSize: 9,
-        color: Colors.textMuted,
     },
 
     legendCell: {

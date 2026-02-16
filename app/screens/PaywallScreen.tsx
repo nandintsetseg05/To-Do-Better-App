@@ -1,9 +1,9 @@
 import { Button } from '@/app/components/shared/Button';
 import { Card } from '@/app/components/shared/Card';
-import { Colors } from '@/app/constants/colors';
 import { Config } from '@/app/constants/config';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
@@ -21,16 +21,18 @@ const PREMIUM_FEATURES = [
 ] as const;
 
 export default function PaywallScreen() {
+    const colors = useColors();
+
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.content}>
                 {/* Crown Header */}
                 <View style={styles.header}>
-                    <View style={styles.crownCircle}>
-                        <Ionicons name="star" size={40} color={Colors.secondary} />
+                    <View style={[styles.crownCircle, { backgroundColor: colors.secondaryLight + '30' }]}>
+                        <Ionicons name="star" size={40} color={colors.secondary} />
                     </View>
-                    <Text style={styles.title}>Go Premium ✨</Text>
-                    <Text style={styles.subtitle}>
+                    <Text style={[styles.title, { color: colors.text }]}>Go Premium ✨</Text>
+                    <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                         Unlock the full To Do Better experience
                     </Text>
                 </View>
@@ -42,9 +44,9 @@ export default function PaywallScreen() {
                             <Ionicons
                                 name={feature.icon as keyof typeof Ionicons.glyphMap}
                                 size={22}
-                                color={Colors.primary}
+                                color={colors.primary}
                             />
-                            <Text style={styles.featureLabel}>{feature.label}</Text>
+                            <Text style={[styles.featureLabel, { color: colors.text }]}>{feature.label}</Text>
                         </View>
                     ))}
                 </Card>
@@ -62,7 +64,7 @@ export default function PaywallScreen() {
                     />
 
                     <View style={styles.bestValue}>
-                        <Text style={styles.bestValueBadge}>BEST VALUE</Text>
+                        <Text style={[styles.bestValueBadge, { color: colors.primary, backgroundColor: colors.primaryLight + '20' }]}>BEST VALUE</Text>
                     </View>
 
                     <Button
@@ -92,7 +94,6 @@ export default function PaywallScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background,
     },
 
     content: {
@@ -111,7 +112,6 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: Colors.secondaryLight + '30',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: Spacing.base,
@@ -120,13 +120,11 @@ const styles = StyleSheet.create({
     title: {
         fontSize: FontSize['3xl'],
         fontWeight: FontWeight.extrabold,
-        color: Colors.text,
         textAlign: 'center',
     },
 
     subtitle: {
         fontSize: FontSize.base,
-        color: Colors.textSecondary,
         textAlign: 'center',
         marginTop: Spacing.xs,
     },
@@ -145,7 +143,6 @@ const styles = StyleSheet.create({
 
     featureLabel: {
         fontSize: FontSize.base,
-        color: Colors.text,
         flex: 1,
     },
 
@@ -162,8 +159,6 @@ const styles = StyleSheet.create({
     bestValueBadge: {
         fontSize: FontSize.xs,
         fontWeight: FontWeight.bold,
-        color: Colors.primary,
-        backgroundColor: Colors.primaryLight + '20',
         paddingVertical: 2,
         paddingHorizontal: Spacing.sm,
         borderRadius: BorderRadius.sm,

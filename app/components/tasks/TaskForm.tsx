@@ -1,9 +1,9 @@
 import { Button } from '@/app/components/shared/Button';
 import { Input } from '@/app/components/shared/Input';
 import { ModalWrapper } from '@/app/components/shared/ModalWrapper';
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import type { Priority } from '@/app/stores/useAppStore';
 import { Ionicons } from '@expo/vector-icons';
 import { addDays, format } from 'date-fns';
@@ -40,8 +40,9 @@ export const TaskForm: React.FC<TaskFormProps> = ({
     onClose,
     onSubmit,
 }) => {
+    const colors = useColors();
     const [name, setName] = useState('');
-    const [dueDateOffset, setDueDateOffset] = useState<number>(0); // 0=today, 1=tomorrow, 7=week, -1=none
+    const [dueDateOffset, setDueDateOffset] = useState<number>(0);
     const [priority, setPriority] = useState<Priority>('medium');
     const [error, setError] = useState('');
 
@@ -92,13 +93,13 @@ export const TaskForm: React.FC<TaskFormProps> = ({
                 }}
                 error={error}
                 leftIcon={
-                    <Ionicons name="document-text-outline" size={20} color={Colors.textMuted} />
+                    <Ionicons name="document-text-outline" size={20} color={colors.textMuted} />
                 }
             />
 
             {/* Due Date Quick Picks */}
-            <Text style={styles.label}>Due date</Text>
-            <Text style={styles.datePreview}>
+            <Text style={[styles.label, { color: colors.text }]}>Due date</Text>
+            <Text style={[styles.datePreview, { color: colors.textSecondary }]}>
                 📅 {dueDateLabel}
             </Text>
             <View style={styles.presetRow}>
@@ -110,13 +111,15 @@ export const TaskForm: React.FC<TaskFormProps> = ({
                             onPress={() => setDueDateOffset(days)}
                             style={[
                                 styles.presetPill,
-                                dueDateOffset === days && styles.presetPillActive,
+                                { borderColor: colors.border, backgroundColor: colors.surface },
+                                dueDateOffset === days && { borderColor: colors.primary, backgroundColor: colors.primary + '12' },
                             ]}
                         >
                             <Text
                                 style={[
                                     styles.presetText,
-                                    dueDateOffset === days && styles.presetTextActive,
+                                    { color: colors.textSecondary },
+                                    dueDateOffset === days && { color: colors.primary, fontWeight: FontWeight.semibold },
                                 ]}
                             >
                                 {preset.label}
@@ -127,15 +130,15 @@ export const TaskForm: React.FC<TaskFormProps> = ({
             </View>
 
             {/* Priority */}
-            <Text style={styles.label}>Priority</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Priority</Text>
             <View style={styles.priorityRow}>
                 {(['low', 'medium', 'high'] as Priority[]).map((p) => {
                     const color =
                         p === 'high'
-                            ? Colors.priorityHigh
+                            ? colors.priorityHigh
                             : p === 'medium'
-                                ? Colors.priorityMedium
-                                : Colors.priorityLow;
+                                ? colors.priorityMedium
+                                : colors.priorityLow;
                     const isActive = priority === p;
 
                     return (
@@ -144,6 +147,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
                             onPress={() => setPriority(p)}
                             style={[
                                 styles.priorityPill,
+                                { borderColor: colors.border, backgroundColor: colors.surface },
                                 isActive && {
                                     backgroundColor: color + '18',
                                     borderColor: color,
@@ -154,6 +158,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
                             <Text
                                 style={[
                                     styles.priorityText,
+                                    { color: colors.textSecondary },
                                     isActive && { color, fontWeight: FontWeight.semibold },
                                 ]}
                             >
@@ -171,7 +176,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
                     onPress={handleSubmit}
                     fullWidth
                     size="lg"
-                    icon={<Ionicons name="add-circle" size={20} color={Colors.white} />}
+                    icon={<Ionicons name="add-circle" size={20} color={colors.white} />}
                 />
             </View>
         </ModalWrapper>
@@ -182,14 +187,12 @@ const styles = StyleSheet.create({
     label: {
         fontSize: FontSize.sm,
         fontWeight: FontWeight.semibold,
-        color: Colors.text,
         marginBottom: Spacing.sm,
         marginTop: Spacing.base,
     },
 
     datePreview: {
         fontSize: FontSize.base,
-        color: Colors.textSecondary,
         marginBottom: Spacing.sm,
     },
 
@@ -205,23 +208,10 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.sm,
         borderRadius: BorderRadius.full,
         borderWidth: 1.5,
-        borderColor: Colors.border,
-        backgroundColor: Colors.surface,
-    },
-
-    presetPillActive: {
-        borderColor: Colors.primary,
-        backgroundColor: Colors.primary + '12',
     },
 
     presetText: {
         fontSize: FontSize.sm,
-        color: Colors.textSecondary,
-    },
-
-    presetTextActive: {
-        color: Colors.primary,
-        fontWeight: FontWeight.semibold,
     },
 
     // ── Priority ──
@@ -238,8 +228,6 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.sm,
         borderRadius: BorderRadius.full,
         borderWidth: 1.5,
-        borderColor: Colors.border,
-        backgroundColor: Colors.surface,
     },
 
     priorityDot: {
@@ -250,7 +238,6 @@ const styles = StyleSheet.create({
 
     priorityText: {
         fontSize: FontSize.sm,
-        color: Colors.textSecondary,
     },
 
     // ── Submit ──

@@ -1,18 +1,23 @@
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 
-// ── Configure default notification behavior ──
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-        shouldShowBanner: true,
-        shouldShowList: true,
-    }),
-});
+const isWeb = Platform.OS === 'web';
+
+// ── Configure default notification behavior (native only) ──
+if (!isWeb) {
+    Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+            shouldShowBanner: true,
+            shouldShowList: true,
+            shouldPlaySound: true,
+            shouldSetBadge: false,
+        }),
+    });
+}
 
 /**
  * Notification service — handles permissions, scheduling, and cancellation.
+ * Gracefully no-ops on web where expo-notifications APIs are unavailable.
  */
 export const notificationService = {
     /**
@@ -20,6 +25,8 @@ export const notificationService = {
      * Returns true if granted.
      */
     async requestPermissions(): Promise<boolean> {
+        if (isWeb) return false;
+
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
 
         if (existingStatus === 'granted') return true;
@@ -32,6 +39,8 @@ export const notificationService = {
      * Check if permissions are currently granted.
      */
     async hasPermission(): Promise<boolean> {
+        if (isWeb) return false;
+
         const { status } = await Notifications.getPermissionsAsync();
         return status === 'granted';
     },
@@ -52,6 +61,8 @@ export const notificationService = {
         time: string,
         days: number[]
     ): Promise<void> {
+        if (isWeb) return;
+
         const hasPerms = await this.requestPermissions();
         if (!hasPerms) return;
 
@@ -87,6 +98,8 @@ export const notificationService = {
      * Cancel all reminders for a specific habit.
      */
     async cancelHabitReminder(habitId: string): Promise<void> {
+        if (isWeb) return;
+
         const scheduled = await Notifications.getAllScheduledNotificationsAsync();
 
         for (const notif of scheduled) {
@@ -100,6 +113,8 @@ export const notificationService = {
      * Cancel all scheduled notifications.
      */
     async cancelAll(): Promise<void> {
+        if (isWeb) return;
+
         await Notifications.cancelAllScheduledNotificationsAsync();
     },
 
@@ -107,6 +122,8 @@ export const notificationService = {
      * Get count of scheduled notifications (for debugging / settings display).
      */
     async getScheduledCount(): Promise<number> {
+        if (isWeb) return 0;
+
         const scheduled = await Notifications.getAllScheduledNotificationsAsync();
         return scheduled.length;
     },
@@ -115,6 +132,11 @@ export const notificationService = {
      * Send an instant local notification (for testing or one-time events).
      */
     async sendInstant(title: string, body: string): Promise<void> {
+        if (isWeb) {
+            console.log(`[Notification] (web preview) ${title}: ${body}`);
+            return;
+        }
+
         const hasPerms = await this.requestPermissions();
         if (!hasPerms) return;
 

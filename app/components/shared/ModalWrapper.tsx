@@ -1,6 +1,6 @@
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
@@ -31,6 +31,8 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
     showCloseButton = true,
     fullHeight = false,
 }) => {
+    const colors = useColors();
+
     return (
         <Modal
             visible={visible}
@@ -42,13 +44,13 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
             {fullHeight ? (
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={styles.fullContainer}
+                    style={[styles.fullContainer, { backgroundColor: colors.background }]}
                 >
                     <View style={styles.fullContent}>
                         {/* Header */}
-                        <View style={styles.header}>
-                            <View style={styles.dragHandle} />
-                            {title && <Text style={styles.title}>{title}</Text>}
+                        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+                            <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
+                            {title && <Text style={[styles.title, { color: colors.text }]}>{title}</Text>}
                             {showCloseButton && (
                                 <TouchableOpacity
                                     onPress={onClose}
@@ -56,7 +58,7 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
                                     accessibilityLabel="Close modal"
                                     accessibilityRole="button"
                                 >
-                                    <Ionicons name="close" size={24} color={Colors.textSecondary} />
+                                    <Ionicons name="close" size={24} color={colors.textSecondary} />
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -73,7 +75,7 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
             ) : (
                 <View style={styles.overlay}>
                     <TouchableOpacity
-                        style={styles.backdrop}
+                        style={[styles.backdrop, { backgroundColor: colors.overlay }]}
                         activeOpacity={1}
                         onPress={onClose}
                         accessibilityLabel="Close modal"
@@ -82,11 +84,11 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         style={styles.bottomSheet}
                     >
-                        <View style={styles.sheetContent}>
+                        <View style={[styles.sheetContent, { backgroundColor: colors.background }]}>
                             {/* Header */}
-                            <View style={styles.header}>
-                                <View style={styles.dragHandle} />
-                                {title && <Text style={styles.title}>{title}</Text>}
+                            <View style={[styles.header, { borderBottomColor: colors.border }]}>
+                                <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
+                                {title && <Text style={[styles.title, { color: colors.text }]}>{title}</Text>}
                                 {showCloseButton && (
                                     <TouchableOpacity
                                         onPress={onClose}
@@ -94,7 +96,7 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = ({
                                         accessibilityLabel="Close modal"
                                         accessibilityRole="button"
                                     >
-                                        <Ionicons name="close" size={24} color={Colors.textSecondary} />
+                                        <Ionicons name="close" size={24} color={colors.textSecondary} />
                                     </TouchableOpacity>
                                 )}
                             </View>
@@ -118,7 +120,6 @@ const styles = StyleSheet.create({
     // ── Full Height ──
     fullContainer: {
         flex: 1,
-        backgroundColor: Colors.background,
     },
 
     fullContent: {
@@ -133,7 +134,6 @@ const styles = StyleSheet.create({
 
     backdrop: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: Colors.overlay,
     },
 
     bottomSheet: {
@@ -141,7 +141,6 @@ const styles = StyleSheet.create({
     },
 
     sheetContent: {
-        backgroundColor: Colors.background,
         borderTopLeftRadius: BorderRadius['2xl'],
         borderTopRightRadius: BorderRadius['2xl'],
         paddingBottom: Spacing['2xl'],
@@ -154,21 +153,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: Spacing.base,
         paddingBottom: Spacing.md,
         borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
     },
 
     dragHandle: {
         width: 36,
         height: 4,
         borderRadius: 2,
-        backgroundColor: Colors.border,
         marginBottom: Spacing.sm,
     },
 
     title: {
         fontSize: FontSize.lg,
         fontWeight: FontWeight.bold,
-        color: Colors.text,
         textAlign: 'center',
     },
 

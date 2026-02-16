@@ -7,32 +7,32 @@ import 'react-native-reanimated';
 
 import { syncService } from '@/app/services/sync';
 import { useAuthStore } from '@/app/stores/useAuthStore';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeStore } from '@/app/stores/useThemeStore';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const initialize = useAuthStore((s) => s.initialize);
+  const initAuth = useAuthStore((s) => s.initialize);
   const user = useAuthStore((s) => s.user);
+  const initTheme = useThemeStore((s) => s.initialize);
+  const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const appState = useRef(AppState.currentState);
 
-  // Initialize auth session listener on app start
+  // Initialize auth + theme on app start
   useEffect(() => {
-    const unsubscribe = initialize();
-    return unsubscribe;
-  }, [initialize]);
+    const unsubAuth = initAuth();
+    initTheme();
+    return unsubAuth;
+  }, [initAuth, initTheme]);
 
   // Sync when user signs in or app comes to foreground
   useEffect(() => {
     if (!user) return;
 
-    // Sync on sign-in
     syncService.fullSync();
 
-    // Sync when app returns from background
     const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextState === 'active') {
         syncService.fullSync();
@@ -44,12 +44,12 @@ export default function RootLayout() {
   }, [user]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={resolvedTheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>
   );
 }

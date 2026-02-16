@@ -1,6 +1,6 @@
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import React, { useState } from 'react';
 import {
     StyleSheet,
@@ -29,27 +29,30 @@ export const Input: React.FC<InputProps> = ({
     containerStyle,
     ...textInputProps
 }) => {
+    const colors = useColors();
     const [isFocused, setIsFocused] = useState(false);
 
     const inputContainerStyles: ViewStyle[] = [
         styles.inputContainer,
-        isFocused && styles.inputFocused,
-        error ? styles.inputError : undefined,
+        { borderColor: colors.border, backgroundColor: colors.surface },
+        isFocused && { borderColor: colors.primary, shadowColor: colors.primary, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 2 },
+        error ? { borderColor: colors.error } : undefined,
     ].filter(Boolean) as ViewStyle[];
 
     return (
         <View style={[styles.wrapper, containerStyle]}>
-            {label && <Text style={styles.label}>{label}</Text>}
+            {label && <Text style={[styles.label, { color: colors.text }]}>{label}</Text>}
 
             <View style={inputContainerStyles}>
                 {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
                 <TextInput
                     style={[
                         styles.input,
+                        { color: colors.text },
                         leftIcon ? styles.inputWithLeftIcon : undefined,
                         rightIcon ? styles.inputWithRightIcon : undefined,
                     ]}
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     onFocus={(e) => {
                         setIsFocused(true);
                         textInputProps.onFocus?.(e);
@@ -64,8 +67,8 @@ export const Input: React.FC<InputProps> = ({
                 {rightIcon && <View style={styles.iconRight}>{rightIcon}</View>}
             </View>
 
-            {error && <Text style={styles.error}>{error}</Text>}
-            {hint && !error && <Text style={styles.hint}>{hint}</Text>}
+            {error && <Text style={[styles.error, { color: colors.error }]}>{error}</Text>}
+            {hint && !error && <Text style={[styles.hint, { color: colors.textMuted }]}>{hint}</Text>}
         </View>
     );
 };
@@ -78,7 +81,6 @@ const styles = StyleSheet.create({
     label: {
         fontSize: FontSize.sm,
         fontWeight: FontWeight.medium,
-        color: Colors.text,
         marginBottom: Spacing.xs,
     },
 
@@ -86,29 +88,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1.5,
-        borderColor: Colors.border,
         borderRadius: BorderRadius.lg,
-        backgroundColor: Colors.surface,
         minHeight: 48,
-    },
-
-    inputFocused: {
-        borderColor: Colors.primary,
-        shadowColor: Colors.primary,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-
-    inputError: {
-        borderColor: Colors.error,
     },
 
     input: {
         flex: 1,
         fontSize: FontSize.base,
-        color: Colors.text,
         paddingHorizontal: Spacing.md,
         paddingVertical: Spacing.sm,
     },
@@ -131,13 +117,11 @@ const styles = StyleSheet.create({
 
     error: {
         fontSize: FontSize.xs,
-        color: Colors.error,
         marginTop: Spacing.xs,
     },
 
     hint: {
         fontSize: FontSize.xs,
-        color: Colors.textMuted,
         marginTop: Spacing.xs,
     },
 });

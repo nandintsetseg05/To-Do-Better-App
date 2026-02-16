@@ -1,6 +1,6 @@
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import type { OneTimeTask } from '@/app/stores/useAppStore';
 import { Ionicons } from '@expo/vector-icons';
 import { format, isPast, isToday, isTomorrow, parseISO } from 'date-fns';
@@ -34,6 +34,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     onPress,
     onDelete,
 }) => {
+    const colors = useColors();
     const scale = useSharedValue(1);
 
     const cardAnimatedStyle = useAnimatedStyle(() => ({
@@ -57,10 +58,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
     const priorityColor =
         task.priority === 'high'
-            ? Colors.priorityHigh
+            ? colors.priorityHigh
             : task.priority === 'medium'
-                ? Colors.priorityMedium
-                : Colors.priorityLow;
+                ? colors.priorityMedium
+                : colors.priorityLow;
 
     const dueDateInfo = task.due_date ? getDueDateInfo(task.due_date) : null;
 
@@ -75,6 +76,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 activeOpacity={0.85}
                 style={[
                     styles.card,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
                     task.is_completed && styles.cardCompleted,
                 ]}
                 accessibilityLabel={`${task.name}, ${task.is_completed ? 'completed' : 'pending'}`}
@@ -85,7 +87,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     onPress={handleToggle}
                     style={[
                         styles.checkbox,
-                        task.is_completed && styles.checkboxActive,
+                        { borderColor: colors.border },
+                        task.is_completed && { backgroundColor: colors.success, borderColor: colors.success },
                         !task.is_completed && { borderColor: priorityColor },
                     ]}
                     accessibilityLabel={task.is_completed ? 'Uncheck task' : 'Complete task'}
@@ -94,7 +97,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
                     {task.is_completed && (
-                        <Ionicons name="checkmark" size={14} color={Colors.white} />
+                        <Ionicons name="checkmark" size={14} color={colors.white} />
                     )}
                 </TouchableOpacity>
 
@@ -103,7 +106,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     <Text
                         style={[
                             styles.name,
-                            task.is_completed && styles.nameCompleted,
+                            { color: colors.text },
+                            task.is_completed && { textDecorationLine: 'line-through' as const, color: colors.textSecondary },
                         ]}
                         numberOfLines={2}
                     >
@@ -115,12 +119,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                             <Ionicons
                                 name="time-outline"
                                 size={12}
-                                color={dueDateInfo.isOverdue ? Colors.error : Colors.textMuted}
+                                color={dueDateInfo.isOverdue ? colors.error : colors.textMuted}
                             />
                             <Text
                                 style={[
                                     styles.dueText,
-                                    dueDateInfo.isOverdue && styles.dueTextOverdue,
+                                    { color: colors.textMuted },
+                                    dueDateInfo.isOverdue && { color: colors.error, fontWeight: FontWeight.semibold },
                                 ]}
                             >
                                 {dueDateInfo.label}
@@ -140,7 +145,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     accessibilityRole="button"
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                    <Ionicons name="trash-outline" size={18} color={Colors.textMuted} />
+                    <Ionicons name="trash-outline" size={18} color={colors.textMuted} />
                 </TouchableOpacity>
             </TouchableOpacity>
         </Animated.View>
@@ -170,11 +175,9 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: Colors.surface,
         borderRadius: BorderRadius.lg,
         padding: Spacing.md,
         borderWidth: 1,
-        borderColor: Colors.border,
         gap: Spacing.md,
     },
 
@@ -188,14 +191,8 @@ const styles = StyleSheet.create({
         height: 24,
         borderRadius: 6,
         borderWidth: 2,
-        borderColor: Colors.border,
         alignItems: 'center',
         justifyContent: 'center',
-    },
-
-    checkboxActive: {
-        backgroundColor: Colors.success,
-        borderColor: Colors.success,
     },
 
     // ── Content ──
@@ -206,12 +203,6 @@ const styles = StyleSheet.create({
     name: {
         fontSize: FontSize.base,
         fontWeight: FontWeight.medium,
-        color: Colors.text,
-    },
-
-    nameCompleted: {
-        textDecorationLine: 'line-through',
-        color: Colors.textSecondary,
     },
 
     dueRow: {
@@ -223,12 +214,6 @@ const styles = StyleSheet.create({
 
     dueText: {
         fontSize: FontSize.xs,
-        color: Colors.textMuted,
-    },
-
-    dueTextOverdue: {
-        color: Colors.error,
-        fontWeight: FontWeight.semibold,
     },
 
     // ── Delete ──

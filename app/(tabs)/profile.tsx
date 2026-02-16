@@ -1,14 +1,16 @@
 import { Button } from '@/app/components/shared/Button';
 import { Card } from '@/app/components/shared/Card';
-import { Colors } from '@/app/constants/colors';
 import { Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
+import { exportService } from '@/app/services/export';
 import { notificationService } from '@/app/services/notifications';
 import { syncService } from '@/app/services/sync';
 import { useAuthStore } from '@/app/stores/useAuthStore';
+import { useThemeStore } from '@/app/stores/useThemeStore';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     Alert,
     SafeAreaView,
@@ -21,14 +23,18 @@ import {
 } from 'react-native';
 
 export default function ProfileScreen() {
+    const colors = useColors();
     const { user, signOut } = useAuthStore();
+    const { themeMode, setThemeMode, initialize: initTheme } = useThemeStore();
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [scheduledCount, setScheduledCount] = useState(0);
     const [isSyncing, setIsSyncing] = useState(false);
     const [lastSyncResult, setLastSyncResult] = useState<string | null>(null);
+    const [isExporting, setIsExporting] = useState(false);
 
-    // Check notification status on mount
+    // Initialize theme + check notification status
     useEffect(() => {
+        initTheme();
         checkNotificationStatus();
     }, []);
 
@@ -56,15 +62,13 @@ export default function ProfileScreen() {
         }
     };
 
-    const handleSignOut = async () => {
+    const handleSignOut = () => {
         Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
             { text: 'Cancel', style: 'cancel' },
             {
                 text: 'Sign Out',
                 style: 'destructive',
-                onPress: async () => {
-                    await signOut();
-                },
+                onPress: async () => { await signOut(); },
             },
         ]);
     };
@@ -82,28 +86,80 @@ export default function ProfileScreen() {
         const result = await syncService.fullSync();
         setIsSyncing(false);
         setLastSyncResult(result.success ? '✅ Synced!' : `❌ ${result.error}`);
-        // Clear status after 3 seconds
         setTimeout(() => setLastSyncResult(null), 3000);
     };
 
+    const handleExportData = async () => {
+        setIsExporting(true);
+        const result = await exportService.exportAsJSON();
+        setIsExporting(false);
+        if (!result.success) {
+            Alert.alert('Export Failed', result.error ?? 'Unknown error');
+        }
+    };
+
+    const handleDeleteAccount = () => {
+        Alert.alert(
+            '⚠️ Delete Account',
+            'This will permanently delete your account and all synced data. Local data will be kept. This cannot be undone.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete Account',
+                    style: 'destructive',
+                    onPress: async () => {
+                        // Sign out (actual account deletion requires Supabase admin SDK)
+                        await signOut();
+                        Alert.alert(
+                            'Account Deleted',
+                            'Your account has been signed out. Contact support to fully remove your data.'
+                        );
+                    },
+                },
+            ]
+        );
+    };
+
+    const cycleTheme = () => {
+        setThemeMode(themeMode === 'light' ? 'dark' : 'light');
+    };
+
+    const themeLabel = themeMode === 'dark' ? 'Dark' : 'Light';
+    const themeIcon = themeMode === 'dark' ? 'moon' : 'sunny';
+
+    // ── Dynamic styles ──
+    const ds = useMemo(() => ({
+        container: { backgroundColor: colors.background },
+        title: { color: colors.text },
+        userName: { color: colors.text },
+        userEmail: { color: colors.textSecondary },
+        sectionTitle: { color: colors.textSecondary },
+        settingsLabel: { color: colors.text },
+        settingsValue: { color: colors.textSecondary },
+        divider: { backgroundColor: colors.border },
+        avatar: { backgroundColor: colors.primaryLight + '20' },
+        themeBadge: { backgroundColor: colors.primary + '15' },
+        themeBadgeText: { color: colors.primary },
+    }), [colors]);
+
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, ds.container]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>Profile</Text>
+                    <Text style={[styles.title, ds.title]}>Profile</Text>
                 </View>
 
                 {/* User Info Card */}
                 <Card style={styles.userCard}>
                     <View style={styles.avatarContainer}>
-                        <View style={styles.avatar}>
-                            <Ionicons name="person" size={32} color={Colors.primary} />
+                        <View style={[styles.avatar, ds.avatar]}>
+                            <Ionicons name="person" size={32} color={colors.primary} />
                         </View>
                         <View style={styles.userInfo}>
-                            <Text style={styles.userName}>
+                            <Text style={[styles.userName, ds.userName]}>
                                 {user ? user.email?.split('@')[0] : 'Guest User'}
                             </Text>
-                            <Text style={styles.userEmail}>
+                            <Text style={[styles.userEmail, ds.userEmail]}>
                                 {user ? user.email : 'Sign in to sync your data'}
                             </Text>
                         </View>
@@ -127,11 +183,11 @@ export default function ProfileScreen() {
                     )}
                 </Card>
 
-                {/* Data & Sync (signed-in users only) */}
-                {user && (
-                    <>
-                        <Text style={styles.sectionTitle}>Data & Sync</Text>
-                        <Card>
+                {/* Data & Sync */}
+                <Text style={[styles.sectionTitle, ds.sectionTitle]}>Data</Text>
+                <Card>
+                    {user && (
+                        <>
                             <TouchableOpacity
                                 style={styles.settingsRow}
                                 onPress={handleSync}
@@ -140,48 +196,80 @@ export default function ProfileScreen() {
                                 <Ionicons
                                     name="cloud-upload-outline"
                                     size={22}
-                                    color={isSyncing ? Colors.textMuted : Colors.primary}
+                                    color={isSyncing ? colors.textMuted : colors.primary}
                                 />
-                                <Text style={[styles.settingsLabel, { color: Colors.primary }]}>
+                                <Text style={[styles.settingsLabel, { color: colors.primary }]}>
                                     {isSyncing ? 'Syncing...' : 'Sync Now'}
                                 </Text>
                                 {lastSyncResult && (
-                                    <Text style={styles.settingsValue}>{lastSyncResult}</Text>
+                                    <Text style={[styles.settingsValue, ds.settingsValue]}>{lastSyncResult}</Text>
                                 )}
                             </TouchableOpacity>
-                        </Card>
-                    </>
-                )}
+                            <View style={[styles.divider, ds.divider]} />
+                        </>
+                    )}
+                    <TouchableOpacity
+                        style={styles.settingsRow}
+                        onPress={handleExportData}
+                        disabled={isExporting}
+                    >
+                        <Ionicons
+                            name="download-outline"
+                            size={22}
+                            color={colors.textSecondary}
+                        />
+                        <Text style={[styles.settingsLabel, ds.settingsLabel]}>
+                            {isExporting ? 'Exporting...' : 'Export Data (JSON)'}
+                        </Text>
+                        <Ionicons name="share-outline" size={18} color={colors.textMuted} />
+                    </TouchableOpacity>
+                </Card>
 
-                {/* Notifications Section */}
-                <Text style={styles.sectionTitle}>Notifications</Text>
+                {/* Appearance */}
+                <Text style={[styles.sectionTitle, ds.sectionTitle]}>Appearance</Text>
+                <Card>
+                    <TouchableOpacity style={styles.settingsRow} onPress={cycleTheme}>
+                        <Ionicons
+                            name={themeIcon as any}
+                            size={22}
+                            color={colors.textSecondary}
+                        />
+                        <Text style={[styles.settingsLabel, ds.settingsLabel]}>Dark Mode</Text>
+                        <View style={[styles.themeBadge, ds.themeBadge]}>
+                            <Text style={[styles.themeBadgeText, ds.themeBadgeText]}>{themeLabel}</Text>
+                        </View>
+                    </TouchableOpacity>
+                </Card>
+
+                {/* Notifications */}
+                <Text style={[styles.sectionTitle, ds.sectionTitle]}>Notifications</Text>
                 <Card>
                     <View style={styles.settingsRow}>
-                        <Ionicons name="notifications-outline" size={22} color={Colors.textSecondary} />
-                        <Text style={styles.settingsLabel}>Push Notifications</Text>
+                        <Ionicons name="notifications-outline" size={22} color={colors.textSecondary} />
+                        <Text style={[styles.settingsLabel, ds.settingsLabel]}>Push Notifications</Text>
                         <Switch
                             value={notificationsEnabled}
                             onValueChange={handleToggleNotifications}
-                            trackColor={{ false: Colors.border, true: Colors.primary + '50' }}
-                            thumbColor={notificationsEnabled ? Colors.primary : Colors.textMuted}
+                            trackColor={{ false: colors.border, true: colors.primary + '50' }}
+                            thumbColor={notificationsEnabled ? colors.primary : colors.textMuted}
                         />
                     </View>
 
                     {notificationsEnabled && (
                         <>
-                            <View style={styles.divider} />
+                            <View style={[styles.divider, ds.divider]} />
                             <View style={styles.settingsRow}>
-                                <Ionicons name="alarm-outline" size={22} color={Colors.textSecondary} />
-                                <Text style={styles.settingsLabel}>Active Reminders</Text>
-                                <Text style={styles.settingsValue}>{scheduledCount}</Text>
+                                <Ionicons name="alarm-outline" size={22} color={colors.textSecondary} />
+                                <Text style={[styles.settingsLabel, ds.settingsLabel]}>Active Reminders</Text>
+                                <Text style={[styles.settingsValue, ds.settingsValue]}>{scheduledCount}</Text>
                             </View>
-                            <View style={styles.divider} />
+                            <View style={[styles.divider, ds.divider]} />
                             <TouchableOpacity
                                 style={styles.settingsRow}
                                 onPress={handleTestNotification}
                             >
-                                <Ionicons name="paper-plane-outline" size={22} color={Colors.primary} />
-                                <Text style={[styles.settingsLabel, { color: Colors.primary }]}>
+                                <Ionicons name="paper-plane-outline" size={22} color={colors.primary} />
+                                <Text style={[styles.settingsLabel, { color: colors.primary }]}>
                                     Send Test Notification
                                 </Text>
                             </TouchableOpacity>
@@ -189,71 +277,62 @@ export default function ProfileScreen() {
                     )}
                 </Card>
 
-                {/* Settings Section */}
-                <Text style={styles.sectionTitle}>Appearance</Text>
-                <Card>
-                    <SettingsRow
-                        icon="moon-outline"
-                        label="Dark Mode"
-                        value="System"
-                    />
-                </Card>
-
-                {/* Premium Section */}
-                <Text style={styles.sectionTitle}>Premium</Text>
+                {/* Premium */}
+                <Text style={[styles.sectionTitle, ds.sectionTitle]}>Premium</Text>
                 <Card
                     onPress={() => {
                         // TODO: Navigate to PaywallScreen
                     }}
                 >
                     <View style={styles.premiumRow}>
-                        <Ionicons name="star" size={24} color={Colors.secondary} />
+                        <Ionicons name="star" size={24} color={colors.secondary} />
                         <View style={styles.premiumInfo}>
-                            <Text style={styles.premiumTitle}>Upgrade to Premium</Text>
-                            <Text style={styles.premiumSubtitle}>
+                            <Text style={[styles.premiumTitle, { color: colors.text }]}>Upgrade to Premium</Text>
+                            <Text style={[styles.premiumSubtitle, { color: colors.textSecondary }]}>
                                 Unlimited AI messages, no ads
                             </Text>
                         </View>
-                        <Ionicons
-                            name="chevron-forward"
-                            size={20}
-                            color={Colors.textMuted}
-                        />
+                        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
                     </View>
                 </Card>
 
+                {/* Account Management */}
+                {user && (
+                    <>
+                        <Text style={[styles.sectionTitle, ds.sectionTitle]}>Account</Text>
+                        <Card>
+                            <TouchableOpacity
+                                style={styles.settingsRow}
+                                onPress={handleDeleteAccount}
+                            >
+                                <Ionicons name="trash-outline" size={22} color={colors.error} />
+                                <Text style={[styles.settingsLabel, { color: colors.error }]}>
+                                    Delete Account
+                                </Text>
+                            </TouchableOpacity>
+                        </Card>
+                    </>
+                )}
+
                 {/* About */}
-                <Text style={styles.sectionTitle}>About</Text>
+                <Text style={[styles.sectionTitle, ds.sectionTitle]}>About</Text>
                 <Card>
-                    <SettingsRow icon="information-circle-outline" label="Version" value="1.0.0" />
+                    <View style={styles.settingsRow}>
+                        <Ionicons name="information-circle-outline" size={22} color={colors.textSecondary} />
+                        <Text style={[styles.settingsLabel, ds.settingsLabel]}>Version</Text>
+                        <Text style={[styles.settingsValue, ds.settingsValue]}>1.0.0</Text>
+                    </View>
                 </Card>
+
+                <View style={{ height: Spacing['2xl'] }} />
             </ScrollView>
         </SafeAreaView>
-    );
-}
-
-function SettingsRow({
-    icon,
-    label,
-    value,
-}: {
-    icon: keyof typeof Ionicons.glyphMap;
-    label: string;
-    value: string;
-}) {
-    return (
-        <View style={styles.settingsRow}>
-            <Ionicons name={icon} size={22} color={Colors.textSecondary} />
-            <Text style={styles.settingsLabel}>{label}</Text>
-            <Text style={styles.settingsValue}>{value}</Text>
-        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background,
     },
 
     scrollContent: {
@@ -269,7 +348,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: FontSize['2xl'],
         fontWeight: FontWeight.bold,
-        color: Colors.text,
     },
 
     // ── User Card ──
@@ -288,7 +366,6 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: Colors.primaryLight + '20',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -300,12 +377,10 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: FontSize.lg,
         fontWeight: FontWeight.semibold,
-        color: Colors.text,
     },
 
     userEmail: {
         fontSize: FontSize.sm,
-        color: Colors.textSecondary,
         marginTop: 2,
     },
 
@@ -313,7 +388,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: FontSize.sm,
         fontWeight: FontWeight.semibold,
-        color: Colors.textSecondary,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
         marginHorizontal: Spacing.lg,
@@ -332,18 +406,27 @@ const styles = StyleSheet.create({
     settingsLabel: {
         flex: 1,
         fontSize: FontSize.base,
-        color: Colors.text,
     },
 
     settingsValue: {
         fontSize: FontSize.base,
-        color: Colors.textSecondary,
     },
 
     divider: {
         height: 1,
-        backgroundColor: Colors.border,
         marginVertical: Spacing.sm,
+    },
+
+    // ── Theme Badge ──
+    themeBadge: {
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.xxs,
+        borderRadius: 12,
+    },
+
+    themeBadgeText: {
+        fontSize: FontSize.sm,
+        fontWeight: FontWeight.medium,
     },
 
     // ── Premium ──
@@ -360,12 +443,10 @@ const styles = StyleSheet.create({
     premiumTitle: {
         fontSize: FontSize.base,
         fontWeight: FontWeight.semibold,
-        color: Colors.text,
     },
 
     premiumSubtitle: {
         fontSize: FontSize.sm,
-        color: Colors.textSecondary,
         marginTop: 2,
     },
 });

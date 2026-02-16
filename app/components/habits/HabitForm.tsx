@@ -2,9 +2,9 @@ import { Button } from '@/app/components/shared/Button';
 import { Input } from '@/app/components/shared/Input';
 import { ModalWrapper } from '@/app/components/shared/ModalWrapper';
 import { TimePicker } from '@/app/components/shared/TimePicker';
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import type { Priority, RecurrenceType } from '@/app/stores/useAppStore';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
@@ -41,6 +41,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({
     onClose,
     onSubmit,
 }) => {
+    const colors = useColors();
     const [name, setName] = useState('');
     const [emoji, setEmoji] = useState('💪');
     const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('daily');
@@ -93,7 +94,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({
     return (
         <ModalWrapper visible={visible} onClose={onClose} title="New Habit">
             {/* Emoji Picker */}
-            <Text style={styles.label}>Choose an emoji</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Choose an emoji</Text>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -105,7 +106,8 @@ export const HabitForm: React.FC<HabitFormProps> = ({
                         onPress={() => setEmoji(e)}
                         style={[
                             styles.emojiButton,
-                            emoji === e && styles.emojiSelected,
+                            { backgroundColor: colors.background },
+                            emoji === e && { borderColor: colors.primary, backgroundColor: colors.primary + '10' },
                         ]}
                     >
                         <Text style={styles.emojiText}>{e}</Text>
@@ -127,17 +129,19 @@ export const HabitForm: React.FC<HabitFormProps> = ({
             />
 
             {/* Recurrence */}
-            <Text style={styles.label}>Repeat</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Repeat</Text>
             <View style={styles.toggleRow}>
                 <TogglePill
                     label="Every day"
                     active={recurrenceType === 'daily'}
                     onPress={() => setRecurrenceType('daily')}
+                    colors={colors}
                 />
                 <TogglePill
                     label="Specific days"
                     active={recurrenceType === 'weekly'}
                     onPress={() => setRecurrenceType('weekly')}
+                    colors={colors}
                 />
             </View>
 
@@ -149,13 +153,15 @@ export const HabitForm: React.FC<HabitFormProps> = ({
                             onPress={() => toggleDay(index)}
                             style={[
                                 styles.dayButton,
-                                recurrenceDays.includes(index) && styles.dayButtonActive,
+                                { backgroundColor: colors.background, borderColor: colors.border },
+                                recurrenceDays.includes(index) && { backgroundColor: colors.primary, borderColor: colors.primary },
                             ]}
                         >
                             <Text
                                 style={[
                                     styles.dayLabel,
-                                    recurrenceDays.includes(index) && styles.dayLabelActive,
+                                    { color: colors.textSecondary },
+                                    recurrenceDays.includes(index) && { color: colors.white },
                                 ]}
                             >
                                 {label}
@@ -166,25 +172,28 @@ export const HabitForm: React.FC<HabitFormProps> = ({
             )}
 
             {/* Priority */}
-            <Text style={styles.label}>Priority</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Priority</Text>
             <View style={styles.toggleRow}>
                 <TogglePill
                     label="Low"
                     active={priority === 'low'}
                     onPress={() => setPriority('low')}
-                    color={Colors.priorityLow}
+                    color={colors.priorityLow}
+                    colors={colors}
                 />
                 <TogglePill
                     label="Medium"
                     active={priority === 'medium'}
                     onPress={() => setPriority('medium')}
-                    color={Colors.priorityMedium}
+                    color={colors.priorityMedium}
+                    colors={colors}
                 />
                 <TogglePill
                     label="High"
                     active={priority === 'high'}
                     onPress={() => setPriority('high')}
-                    color={Colors.priorityHigh}
+                    color={colors.priorityHigh}
+                    colors={colors}
                 />
             </View>
 
@@ -202,7 +211,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({
                     onPress={handleSubmit}
                     fullWidth
                     size="lg"
-                    icon={<Ionicons name="add-circle" size={20} color={Colors.white} />}
+                    icon={<Ionicons name="add-circle" size={20} color={colors.white} />}
                 />
             </View>
         </ModalWrapper>
@@ -215,25 +224,29 @@ function TogglePill({
     active,
     onPress,
     color,
+    colors,
 }: {
     label: string;
     active: boolean;
     onPress: () => void;
     color?: string;
+    colors: ReturnType<typeof useColors>;
 }) {
-    const activeColor = color || Colors.primary;
+    const activeColor = color || colors.primary;
 
     return (
         <TouchableOpacity
             onPress={onPress}
             style={[
                 styles.pill,
+                { borderColor: colors.border, backgroundColor: colors.surface },
                 active && { backgroundColor: activeColor + '18', borderColor: activeColor },
             ]}
         >
             <Text
                 style={[
                     styles.pillText,
+                    { color: colors.textSecondary },
                     active && { color: activeColor, fontWeight: FontWeight.semibold },
                 ]}
             >
@@ -247,7 +260,6 @@ const styles = StyleSheet.create({
     label: {
         fontSize: FontSize.sm,
         fontWeight: FontWeight.semibold,
-        color: Colors.text,
         marginBottom: Spacing.sm,
         marginTop: Spacing.base,
     },
@@ -265,14 +277,8 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: Colors.background,
         borderWidth: 2,
         borderColor: 'transparent',
-    },
-
-    emojiSelected: {
-        borderColor: Colors.primary,
-        backgroundColor: Colors.primary + '10',
     },
 
     emojiText: {
@@ -290,13 +296,10 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.sm,
         borderRadius: BorderRadius.full,
         borderWidth: 1.5,
-        borderColor: Colors.border,
-        backgroundColor: Colors.surface,
     },
 
     pillText: {
         fontSize: FontSize.sm,
-        color: Colors.textSecondary,
     },
 
     // ── Days ──
@@ -312,24 +315,12 @@ const styles = StyleSheet.create({
         borderRadius: 19,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: Colors.background,
         borderWidth: 1.5,
-        borderColor: Colors.border,
-    },
-
-    dayButtonActive: {
-        backgroundColor: Colors.primary,
-        borderColor: Colors.primary,
     },
 
     dayLabel: {
         fontSize: FontSize.sm,
         fontWeight: FontWeight.medium,
-        color: Colors.textSecondary,
-    },
-
-    dayLabelActive: {
-        color: Colors.white,
     },
 
     // ── Submit ──

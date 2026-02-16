@@ -1,8 +1,8 @@
 import { Button } from '@/app/components/shared/Button';
 import { Input } from '@/app/components/shared/Input';
-import { Colors } from '@/app/constants/colors';
 import { Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import { useAuthStore } from '@/app/stores/useAuthStore';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 
 export default function AuthScreen() {
+    const colors = useColors();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -53,7 +54,7 @@ export default function AuthScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.flex}
@@ -62,10 +63,10 @@ export default function AuthScreen() {
                     contentContainerStyle={styles.content}
                     keyboardShouldPersistTaps="handled"
                 >
-                    <Text style={styles.title}>
+                    <Text style={[styles.title, { color: colors.text }]}>
                         {isSignUp ? 'Create Account ✨' : 'Welcome Back 👋'}
                     </Text>
-                    <Text style={styles.subtitle}>
+                    <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                         {isSignUp
                             ? 'Sign up to sync your habits across devices'
                             : 'Sign in to sync your habits across devices'}
@@ -137,7 +138,6 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background,
     },
 
     flex: {
@@ -153,13 +153,11 @@ const styles = StyleSheet.create({
     title: {
         fontSize: FontSize['3xl'],
         fontWeight: FontWeight.bold,
-        color: Colors.text,
         textAlign: 'center',
     },
 
     subtitle: {
         fontSize: FontSize.base,
-        color: Colors.textSecondary,
         textAlign: 'center',
         marginTop: Spacing.sm,
         marginBottom: Spacing.xl,

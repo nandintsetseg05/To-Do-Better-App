@@ -1,5 +1,5 @@
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
+import { useColors } from '@/app/constants/useColors';
 import React, { useEffect } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import Animated, {
@@ -23,6 +23,7 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
     borderRadius = BorderRadius.md,
     style,
 }) => {
+    const colors = useColors();
     const opacity = useSharedValue(0.3);
 
     useEffect(() => {
@@ -40,8 +41,7 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
     return (
         <Animated.View
             style={[
-                styles.skeleton,
-                { width: width as number, height, borderRadius },
+                { backgroundColor: colors.border, width: width as number, height, borderRadius },
                 animatedStyle,
                 style,
             ]}
@@ -50,30 +50,27 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
 };
 
 /** Pre-composed skeleton for a card-shaped placeholder */
-export const CardSkeleton: React.FC<{ style?: ViewStyle }> = ({ style }) => (
-    <View style={[styles.cardSkeleton, style]}>
-        <View style={styles.cardRow}>
-            <LoadingSkeleton width={40} height={40} borderRadius={BorderRadius.full} />
-            <View style={styles.cardContent}>
-                <LoadingSkeleton width="60%" height={16} />
-                <LoadingSkeleton width="40%" height={12} style={{ marginTop: Spacing.xs }} />
+export const CardSkeleton: React.FC<{ style?: ViewStyle }> = ({ style }) => {
+    const colors = useColors();
+    return (
+        <View style={[styles.cardSkeleton, { backgroundColor: colors.surface, borderColor: colors.border }, style]}>
+            <View style={styles.cardRow}>
+                <LoadingSkeleton width={40} height={40} borderRadius={BorderRadius.full} />
+                <View style={styles.cardContent}>
+                    <LoadingSkeleton width="60%" height={16} />
+                    <LoadingSkeleton width="40%" height={12} style={{ marginTop: Spacing.xs }} />
+                </View>
             </View>
         </View>
-    </View>
-);
+    );
+};
 
 const styles = StyleSheet.create({
-    skeleton: {
-        backgroundColor: Colors.border,
-    },
-
     cardSkeleton: {
-        backgroundColor: Colors.surface,
         borderRadius: BorderRadius.xl,
         padding: Spacing.base,
         marginBottom: Spacing.sm,
         borderWidth: 1,
-        borderColor: Colors.border,
     },
 
     cardRow: {

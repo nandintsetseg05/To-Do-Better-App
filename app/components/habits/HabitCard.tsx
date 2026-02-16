@@ -1,6 +1,6 @@
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import type { Habit } from '@/app/stores/useAppStore';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -34,6 +34,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
     onToggleComplete,
     onPress,
 }) => {
+    const colors = useColors();
     const scale = useSharedValue(1);
     const checkScale = useSharedValue(isCompletedToday ? 1 : 0);
 
@@ -69,19 +70,19 @@ export const HabitCard: React.FC<HabitCardProps> = ({
 
     const priorityColor =
         habit.priority === 'high'
-            ? Colors.priorityHigh
+            ? colors.priorityHigh
             : habit.priority === 'medium'
-                ? Colors.priorityMedium
-                : Colors.priorityLow;
+                ? colors.priorityMedium
+                : colors.priorityLow;
 
     const streakColor =
         currentStreak >= 100
-            ? Colors.streakPlatinum
+            ? colors.streakPlatinum
             : currentStreak >= 30
-                ? Colors.streakGold
+                ? colors.streakGold
                 : currentStreak >= 7
-                    ? Colors.streakFire
-                    : Colors.textMuted;
+                    ? colors.streakFire
+                    : colors.textMuted;
 
     return (
         <Animated.View style={[styles.container, cardAnimatedStyle]}>
@@ -90,7 +91,8 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                 activeOpacity={0.85}
                 style={[
                     styles.card,
-                    isCompletedToday && styles.cardCompleted,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                    isCompletedToday && { backgroundColor: colors.successLight + '30', borderColor: colors.success + '40' },
                 ]}
                 accessibilityLabel={`${habit.name}, ${isCompletedToday ? 'completed' : 'not completed'}`}
                 accessibilityRole="button"
@@ -107,7 +109,8 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                             <Text
                                 style={[
                                     styles.name,
-                                    isCompletedToday && styles.nameCompleted,
+                                    { color: colors.text },
+                                    isCompletedToday && { textDecorationLine: 'line-through' as const, color: colors.textSecondary },
                                 ]}
                                 numberOfLines={1}
                             >
@@ -126,7 +129,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                     </View>
 
                     {/* Recurrence info */}
-                    <Text style={styles.recurrenceText}>
+                    <Text style={[styles.recurrenceText, { color: colors.textMuted }]}>
                         {formatRecurrence(habit)}
                     </Text>
                 </View>
@@ -136,7 +139,8 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                     onPress={handleToggle}
                     style={[
                         styles.checkButton,
-                        isCompletedToday && styles.checkButtonActive,
+                        { borderColor: colors.border },
+                        isCompletedToday && { backgroundColor: colors.success, borderColor: colors.success },
                     ]}
                     accessibilityLabel={isCompletedToday ? 'Mark as incomplete' : 'Mark as complete'}
                     accessibilityRole="checkbox"
@@ -145,7 +149,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                 >
                     {isCompletedToday ? (
                         <Animated.View style={checkAnimatedStyle}>
-                            <Ionicons name="checkmark" size={18} color={Colors.white} />
+                            <Ionicons name="checkmark" size={18} color={colors.white} />
                         </Animated.View>
                     ) : (
                         <View style={styles.checkEmpty} />
@@ -174,22 +178,15 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: Colors.surface,
         borderRadius: BorderRadius.xl,
         padding: Spacing.md,
         borderWidth: 1,
-        borderColor: Colors.border,
-        shadowColor: Colors.black,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.04,
         shadowRadius: 4,
         elevation: 2,
         overflow: 'hidden',
-    },
-
-    cardCompleted: {
-        backgroundColor: Colors.successLight + '30',
-        borderColor: Colors.success + '40',
     },
 
     priorityBar: {
@@ -225,12 +222,6 @@ const styles = StyleSheet.create({
     name: {
         fontSize: FontSize.base,
         fontWeight: FontWeight.semibold,
-        color: Colors.text,
-    },
-
-    nameCompleted: {
-        textDecorationLine: 'line-through',
-        color: Colors.textSecondary,
     },
 
     streakBadge: {
@@ -247,7 +238,6 @@ const styles = StyleSheet.create({
 
     recurrenceText: {
         fontSize: FontSize.xs,
-        color: Colors.textMuted,
         marginTop: Spacing.xxs,
         paddingLeft: 32 + Spacing.sm, // emoji width + gap
     },
@@ -258,15 +248,9 @@ const styles = StyleSheet.create({
         height: 32,
         borderRadius: 16,
         borderWidth: 2,
-        borderColor: Colors.border,
         alignItems: 'center',
         justifyContent: 'center',
         marginLeft: Spacing.sm,
-    },
-
-    checkButtonActive: {
-        backgroundColor: Colors.success,
-        borderColor: Colors.success,
     },
 
     checkEmpty: {

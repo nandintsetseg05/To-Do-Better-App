@@ -1,5 +1,5 @@
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
+import { useColors } from '@/app/constants/useColors';
 import React from 'react';
 import {
     StyleSheet,
@@ -23,8 +23,16 @@ export const Card: React.FC<CardProps> = ({
     padded = true,
     elevated = true,
 }) => {
+    const colors = useColors();
+
+    const dynamicCardStyle: ViewStyle = {
+        backgroundColor: colors.surface,
+        borderColor: colors.border,
+    };
+
     const cardStyles: ViewStyle[] = [
         styles.card,
+        dynamicCardStyle,
         padded && styles.padded,
         elevated && styles.elevated,
         style,
@@ -48,10 +56,8 @@ export const Card: React.FC<CardProps> = ({
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: Colors.surface,
         borderRadius: BorderRadius.xl,
         borderWidth: 1,
-        borderColor: Colors.border,
         overflow: 'hidden',
     },
 
@@ -60,7 +66,7 @@ const styles = StyleSheet.create({
     },
 
     elevated: {
-        shadowColor: Colors.black,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 8,

@@ -1,6 +1,6 @@
-import { Colors } from '@/app/constants/colors';
 import { BorderRadius, Spacing } from '@/app/constants/spacing';
 import { FontSize, FontWeight } from '@/app/constants/typography';
+import { useColors } from '@/app/constants/useColors';
 import { geminiService, type HabitContext } from '@/app/services/gemini';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -22,6 +22,7 @@ interface MotivationCardProps {
  * with a gradient-like background and refresh button.
  */
 export const MotivationCard: React.FC<MotivationCardProps> = ({ context }) => {
+    const colors = useColors();
     const [message, setMessage] = useState<string>('');
     const [isLoading, setIsLoading] = useState(true);
 
@@ -42,10 +43,10 @@ export const MotivationCard: React.FC<MotivationCardProps> = ({ context }) => {
 
     if (!message && isLoading) {
         return (
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: colors.secondary + '08', borderColor: colors.secondary + '20' }]}>
                 <View style={styles.shimmer}>
-                    <View style={styles.shimmerLine} />
-                    <View style={[styles.shimmerLine, { width: '60%' }]} />
+                    <View style={[styles.shimmerLine, { backgroundColor: colors.secondary + '15' }]} />
+                    <View style={[styles.shimmerLine, { backgroundColor: colors.secondary + '15', width: '60%' }]} />
                 </View>
             </View>
         );
@@ -54,13 +55,13 @@ export const MotivationCard: React.FC<MotivationCardProps> = ({ context }) => {
     return (
         <Animated.View
             entering={FadeIn.duration(500)}
-            style={styles.card}
+            style={[styles.card, { backgroundColor: colors.secondary + '08', borderColor: colors.secondary + '20' }]}
         >
             <View style={styles.content}>
                 <View style={styles.iconContainer}>
-                    <Ionicons name="sparkles" size={20} color={Colors.secondary} />
+                    <Ionicons name="sparkles" size={20} color={colors.secondary} />
                 </View>
-                <Text style={styles.message}>{message}</Text>
+                <Text style={[styles.message, { color: colors.text }]}>{message}</Text>
             </View>
             <TouchableOpacity
                 onPress={handleRefresh}
@@ -71,7 +72,7 @@ export const MotivationCard: React.FC<MotivationCardProps> = ({ context }) => {
                 <Ionicons
                     name="refresh"
                     size={16}
-                    color={Colors.textMuted}
+                    color={colors.textMuted}
                 />
             </TouchableOpacity>
         </Animated.View>
@@ -85,9 +86,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: Spacing.md,
         paddingVertical: Spacing.md,
         borderRadius: BorderRadius.lg,
-        backgroundColor: Colors.secondary + '08',
         borderWidth: 1,
-        borderColor: Colors.secondary + '20',
         flexDirection: 'row',
         alignItems: 'flex-start',
     },
@@ -107,7 +106,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: FontSize.base,
         fontWeight: FontWeight.medium,
-        color: Colors.text,
         lineHeight: 22,
     },
 
@@ -126,7 +124,6 @@ const styles = StyleSheet.create({
     shimmerLine: {
         height: 12,
         borderRadius: 6,
-        backgroundColor: Colors.secondary + '15',
         width: '90%',
     },
 });
